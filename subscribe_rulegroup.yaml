@@ -1,0 +1,118 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Project: shared ; common CloudFront WAF WebACL'
+Parameters:
+  Environment:
+    Description: The environment for this stack
+    Type: String
+    AllowedValues:
+      - dev
+      - test
+      - staging
+      - prod
+    Default: test
+  WAFRuleGroup:
+    Description: WAF Rule Group ID
+    Type: String
+    Default: f65b84fc-e4da-494f-9c1b-946859cc2abd
+#  CloudfrontRuleGroupStackName:
+#    Description: The stack name of the cloudformation stack in which cloudfront WAF RuleGroup is defined
+#    Type: String
+# CloudfrontRulesStackName:
+#   Description: The stack name of the cloudformation stack in which common cloudfront WAF Rules and sets are defined
+#    Type: String
+Resources:
+  CloudfrontWebACL:
+    Type: AWS::WAF::WebACL
+    Properties:
+      Name: !Sub "CFWAFWebACL${Environment}"
+      MetricName: !Sub "CFWAFWebACL${Environment}"
+      DefaultAction:
+        Type: ALLOW
+      Rules:
+        - Priority: 1
+          Action:
+            Type: ALLOW
+          RuleId: e59be94b-e073-4bc7-80cf-6c75d92114fb
+        - Priority: 2
+          Action:
+            Type: BLOCK
+          RuleId: 0532eb9b-e191-4e15-894b-a516d9d641e8
+        #- Priority: 6
+        #  OverrideAction:
+        #    Type: COUNT
+        #  RuleId:
+        #   Fn::ImportValue: !Sub "${CloudfrontRuleGroupStackName}-rulegroup"
+        #- Priority: 7
+          #RuleId:
+            #Fn::ImportValue: !Sub "${CloudfrontRulesStackName}-whitelist-pattern-matchrule"
+        #- Priority: 8
+          #RuleId:
+            #Fn::ImportValue: !Sub "${CloudfrontRulesStackName}-blacklist-pattern-matchrule"
+        #- Priority: 9
+          #RuleId:
+            #Fn::ImportValue: !Sub "${CloudfrontRulesStackName}-override-whitelist-rule"
+        #- Priority: 10
+          #RuleId:
+            #Fn::ImportValue: !Sub "${CloudfrontRulesStackName}-override-blacklist-rule"
+  AssociateWAFRulesGroup:
+    DependsOn: CloudfrontWebACL
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !GetAtt 'WAFRuleGroupLambda.Arn'
+      Description: Inserts or deletes WAF Rule Group in a WebACL created by CFN custom resource
+      WebACLId: !Ref CloudfrontWebACL
+      RulesProperty:
+        - ActivatedRule:
+            Type: GROUP
+            OverrideAction:
+              Type: COUNT
+            Priority: 3
+            RuleId: !Ref WAFRuleGroup         
+  WAFRuleGroupLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: updatewafrulegroup.lambda_handler
+      Role: !GetAtt 'LambdaExecutionRole.Arn'
+      Code:
+        S3Bucket: <bucket_name>
+        S3Key: updatewafrulegroup.py.zip
+      Runtime: python3.6
+      Timeout: '50'
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: WAFLambdaPermissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - waf:*
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: '*'
+Outputs:
+  WebACL:
+    Value: !Ref CloudfrontWebACL
+    Export:
+      Name: !Sub "${AWS::StackName}-webacl"
