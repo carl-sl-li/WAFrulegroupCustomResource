@@ -17,6 +17,12 @@ b) AWS::Lambda::Function (WAFRuleGroupLambda): Lambda code which will receive th
 
 c) AWS::IAM::Role (LambdaExecutionRole): Required Lambda basic permissions to create and write cloud watch logs along with appropriate "WAF" IAM permissions (required by the Lambda function).
 
+The code zipped file has to be uploaded to an S3 bucket in the same region as where you CloudFormation stack is created.
+
+      Code:
+        S3Bucket: <bucket_name>
+        S3Key: updatewafrulegroup.py.zip
+
 **Walk-through on what the code updatewafrulegroup.py does:**
 
 CREATE logic:
