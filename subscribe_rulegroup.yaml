@@ -15,12 +15,6 @@ Parameters:
     Description: WAF Rule Group ID
     Type: String
     Default: f65b84fc-e4da-494f-9c1b-946859cc2abd
-#  CloudfrontRuleGroupStackName:
-#    Description: The stack name of the cloudformation stack in which cloudfront WAF RuleGroup is defined
-#    Type: String
-# CloudfrontRulesStackName:
-#   Description: The stack name of the cloudformation stack in which common cloudfront WAF Rules and sets are defined
-#    Type: String
 Resources:
   CloudfrontWebACL:
     Type: AWS::WAF::WebACL
@@ -38,23 +32,6 @@ Resources:
           Action:
             Type: BLOCK
           RuleId: 0532eb9b-e191-4e15-894b-a516d9d641e8
-        #- Priority: 6
-        #  OverrideAction:
-        #    Type: COUNT
-        #  RuleId:
-        #   Fn::ImportValue: !Sub "${CloudfrontRuleGroupStackName}-rulegroup"
-        #- Priority: 7
-          #RuleId:
-            #Fn::ImportValue: !Sub "${CloudfrontRulesStackName}-whitelist-pattern-matchrule"
-        #- Priority: 8
-          #RuleId:
-            #Fn::ImportValue: !Sub "${CloudfrontRulesStackName}-blacklist-pattern-matchrule"
-        #- Priority: 9
-          #RuleId:
-            #Fn::ImportValue: !Sub "${CloudfrontRulesStackName}-override-whitelist-rule"
-        #- Priority: 10
-          #RuleId:
-            #Fn::ImportValue: !Sub "${CloudfrontRulesStackName}-override-blacklist-rule"
   AssociateWAFRulesGroup:
     DependsOn: CloudfrontWebACL
     Type: Custom::CustomResource
