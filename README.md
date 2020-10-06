@@ -11,7 +11,7 @@ At the moment of writing, the API call to subscribe managed WAF rule group is no
 
 **There are 3 main resources types to be constructed in subscribe_rulegroup.yaml template:**
 
-a) Custom::Resource (AssociateWAFRulesGroup) : Custom resource which passes WebACLid, RulesProperty to ServiceToken which reference to the Lambda fucntion.
+a) Custom::Resource (AssociateWAFRulesGroup) : Custom resource which passes WebACLid, RulesProperty to ServiceToken which reference to the Lambda function.
 
 b) AWS::Lambda::Function (WAFRuleGroupLambda): Lambda code which will receive the "ResourceProperties" via Custom Resource and process it using AWS "WebACLUpdate" API call and INSERT, UPDATE or DELETE rule group to WAF web acl as a custom resource.
 
